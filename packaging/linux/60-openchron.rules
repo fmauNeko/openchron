@@ -1,0 +1,9 @@
+# Gives the logged-in user access to Keychron HID devices, which Openchron needs.
+#
+#   sudo cp 60-openchron.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# USB devices and 2.4 GHz receivers.
+KERNEL=="hidraw*", ATTRS{idVendor}=="3434", TAG+="uaccess"
+# Bluetooth devices: the HID device name carries the vendor ID (bus:vendor:product.n).
+KERNEL=="hidraw*", KERNELS=="*:3434:*", TAG+="uaccess"
