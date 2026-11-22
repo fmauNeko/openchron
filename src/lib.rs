@@ -4,4 +4,6 @@ pub mod app;
 pub mod devices;
 pub mod hid;
 pub mod keybindings;
+pub mod paths;
+pub mod persist;
 pub mod protocol;
