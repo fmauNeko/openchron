@@ -7,3 +7,4 @@ pub mod keybindings;
 pub mod paths;
 pub mod persist;
 pub mod protocol;
+pub mod settings;
