@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Openchron",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["build", "--bin=openchron", "--package=openchron"],
+        "filter": { "name": "openchron", "kind": "bin" }
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug unit tests",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["test", "--no-run", "--lib", "--package=openchron"],
+        "filter": { "name": "openchron", "kind": "lib" }
+      },
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
