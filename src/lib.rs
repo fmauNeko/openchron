@@ -11,3 +11,4 @@ pub mod paths;
 pub mod persist;
 pub mod protocol;
 pub mod settings;
+pub mod settings_ui;
