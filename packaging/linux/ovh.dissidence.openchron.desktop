@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Openchron
+GenericName=Keychron Configurator
+Comment=A cross-platform configuration tool for Keychron keyboards and mice
+Exec=openchron
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;
+StartupWMClass=ovh.dissidence.openchron
