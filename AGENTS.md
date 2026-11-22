@@ -34,10 +34,22 @@ Always go through `mise run` / `mise exec --` so the pinned toolchain is used: m
 | -------------------- | ----------------------------------------------------------------------------------- |
 | `src/main.rs`        | Thin entry point: calls `openchron::app::run`                                       |
 | `src/lib.rs`         | Crate root: every module is `pub mod`                                               |
-| `src/app.rs`         | Bootstrap: init order, actions, key bindings, menus, the main window                |
+| `src/app.rs`         | Bootstrap: init order, actions, key bindings, menus, the main window and quit      |
+| `src/assets.rs`      | Asset sources: Openchron icons layered over the GPUI Kit defaults                   |
+| `src/protocol/`      | Pure request builders and reply parsers: `mouse` (Keychron mouse protocol, `0xFFC1`), `via` (VIA raw HID, `0xFF60`) |
+| `src/hid/`           | `Backend`/`Transport` traits, `native` (hidapi), `fake` (scripted, tests only)      |
+| `src/devices/`       | `catalog` (product IDs), `model` (state, commands, updates), `session` + `mouse` + `keyboard` (protocol sessions), `worker` (thread per interface), `manager` (enumeration thread), `store` (app-level `DeviceStore`) |
+| `src/battery.rs`     | Low-battery thresholds, hysteresis and notifications                                |
+| `src/notifications.rs` | System notification hook (recorded in tests)                                      |
+| `src/osd.rs`         | DPI popup window                                                                    |
+| `src/main_window.rs` | Main window: device sidebar and the selected device's page                          |
+| `src/device_page.rs` | Device page: battery, DPI stages, polling rate, profiles                            |
+| `src/settings.rs`, `src/settings_ui.rs` | Settings model and store (`settings.json`), settings dialog        |
+| `src/paths.rs`, `src/persist.rs` | Config dir resolution (XDG-aware), atomic JSON persistence              |
 | `src/keybindings.rs` | `bind`: key binding registration that resolves the `secondary-` alias for the host OS |
+| `docs/keychron-hid.md` | Keychron HID protocols, captures and what is verified on hardware                 |
 | `script/package.sh`  | Release archive packaging for macOS, Linux and Windows                              |
-| `packaging/`         | macOS `Info.plist` template, Linux desktop entry                                    |
+| `packaging/`         | macOS `Info.plist` template, Linux desktop entry and udev rules                     |
 | `.github/workflows/` | `develop.yaml` (CI), `release-please.yaml` (release), `build.yaml` (archives)       |
 | `.vscode/`           | Recommended extensions and CodeLLDB launch configurations                           |
 | `mise.toml`          | Tool versions, tasks and the postinstall hook                                       |
@@ -55,7 +67,7 @@ Always go through `mise run` / `mise exec --` so the pinned toolchain is used: m
 ### GPUI Kit
 
 - Import GPUI through the Kit: `use gpui_kit::prelude::*;` plus explicit `gpui_kit::{...}` items. Styled components live in `gpui_kit::component`; theme colors come from `gpui_kit::component::ActiveTheme` (`cx.theme()`).
-- Call `gpui_kit::init(cx)` before using components, and open windows with `gpui_kit::open_window`, which mounts the Kit `Root`.
+- Call `gpui_kit::init(cx)` before using components, and open windows with `gpui_kit::open_window`, which mounts the Kit `Root`. The one exception is the DPI popup (`osd`): it opens with `cx.open_window` because the Kit `Root` paints an opaque background over its transparent window.
 - Define actions with `gpui_kit::actions!`.
 - Bind keys through `crate::keybindings::bind`, never `KeyBinding::new` with `secondary-` (it panics in GPUI >= 0.3.10; only `KeyBinding::load` resolves the alias). `window.press` in tests resolves `secondary-` already.
 - `gpui-kit` pins an exact `gpui-pre` snapshot of Zed's GPUI, so any update can change GPUI's API. Renovate never automerges it.
@@ -67,6 +79,16 @@ Always go through `mise run` / `mise exec --` so the pinned toolchain is used: m
 - UI behavior is tested in headless windows with `#[gpui_kit::test]` and `gpui_kit::test::TestWindowExt` (`find`, `click`, `press`, `input`, ...). Elements a test looks up need an `.id(...)` and `.test_support()`; `.test_support()` is inert outside tests.
 - Assert behavior (visibility, state, callbacks), never UI copy.
 - Never mutate the environment (`std::env::set_var` is unsafe in Rust 2024): environment-dependent code takes an injected lookup.
+- Tests never open real HID devices or post OS notifications: sessions and the manager run on `hid::fake`, the device store is fed by hand (`devices::store::init(cx, None)`), and `notifications::install_recorder` records notifications. Protocol tests replay frames captured from real hardware (`protocol::mouse::tests`).
+- Protocol changes need a capture from real hardware first; record it in `docs/keychron-hid.md` and mark what is verified.
+
+### Architecture
+
+- HID I/O never runs on the GPUI thread. The `devices::manager` thread owns the `hidapi` context, rescans every 2 s (`hidapi` has no hotplug events) and runs a `devices::worker` thread per supported interface. A worker owns a `Session`, reads the device, then applies commands and the reports the device sends on its own (`0xE2` status, `0xE5` profile), publishing the whole `DeviceState` when it changes.
+- Workers talk to the app only through `DeviceUpdate`s on an `UpdateSink`; the `DeviceStore` entity applies them on the GPUI thread and emits `DeviceStoreEvent`s. Features subscribe to those events (`battery`, `osd`) instead of talking to devices.
+- Commands go from the UI to a worker through the store (`DeviceStore::send`). A worker writes the change, then reads the setting back: the UI always shows the device's state, never an optimistic one.
+- The first state of a device, or its state after it wakes up, is not a change: only a stage switch while online raises `DpiChanged`.
+- Next steps, in order: background mode (tray icon, close to tray, single instance, start at login), keyboard support through Keychron's raw HID commands, the other mouse protocols (`0xFF0A`, `0x008C`), button remapping and macros.
 
 ### Dependencies
 
