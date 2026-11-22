@@ -1,0 +1,16 @@
+[package]
+name = "openchron"
+version = "0.0.0"
+edition = "2024"
+description = "A cross-platform configuration tool for Keychron keyboards and mice"
+license = "MIT"
+authors = ["Florian Maunier"]
+repository = "https://github.com/fmauNeko/openchron"
+readme = "README.md"
+publish = false
+
+[dependencies]
+gpui-kit = "0.10.0"
+
+[dev-dependencies]
+gpui-kit = { version = "0.10.0", features = ["test-support"] }
