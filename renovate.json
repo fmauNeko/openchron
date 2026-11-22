@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":rebaseStalePrs",
+    ":semanticCommits",
+    ":semanticCommitScope(deps)",
+    ":automergeMinor",
+    ":automergeDigest"
+  ],
+  "baseBranchPatterns": ["develop"],
+  "packageRules": [
+    {
+      "description": "GPUI Kit pins exact gpui-pre snapshots, so any update can change GPUI's API: always review it",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["gpui-kit"],
+      "automerge": false
+    },
+    {
+      "description": "Keep the CI runners on Ubuntu 24.04, the image that builds the Linux releases (their glibc floor)",
+      "matchDatasources": ["github-runners"],
+      "matchPackageNames": ["ubuntu"],
+      "enabled": false
+    }
+  ]
+}
