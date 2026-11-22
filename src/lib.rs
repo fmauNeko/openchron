@@ -6,6 +6,7 @@ pub mod devices;
 pub mod hid;
 pub mod keybindings;
 pub mod notifications;
+pub mod osd;
 pub mod paths;
 pub mod persist;
 pub mod protocol;
