@@ -3,7 +3,7 @@
 # a portable archive plus its SHA-256 checksum.
 #
 #   macOS    openchron-<version>-<target>.zip     Openchron.app (ad-hoc signed)
-#   Linux    openchron-<version>-<target>.tar.gz  binary + desktop entry
+#   Linux    openchron-<version>-<target>.tar.gz  binary + desktop entry + udev rules
 #   Windows  openchron-<version>-<target>.zip     openchron.exe
 #
 # Run `mise run build:release` first. Environment:
@@ -40,7 +40,7 @@ case "$target" in
     ;;
   *-linux-*)
     cp target/release/openchron packaging/linux/ovh.dissidence.openchron.desktop \
-      LICENSE README.md "$stage/"
+      packaging/linux/60-openchron.rules LICENSE README.md "$stage/"
     archive="dist/${name}.tar.gz"
     tar -czf "$archive" -C "$(dirname "$stage")" "$name"
     ;;

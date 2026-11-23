@@ -24,7 +24,7 @@ run = "cog install-hook --all --overwrite"
 [tasks."lint:commits"]
 description = "Check that every commit in a git range follows Conventional Commits"
 usage = 'arg "[range]" help="git revision range to check" default="origin/develop..HEAD"'
-run = 'cog check "${usage_range}"'
+run = 'cog check "{{usage.range}}"'
 
 [tasks."deps:linux"]
 description = "Install the system libraries GPUI needs to build on Debian/Ubuntu"
